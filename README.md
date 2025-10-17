@@ -189,6 +189,66 @@ filtered_customers = sdk.get_customers(
 )
 ```
 
+### 🔍 Track Impact
+
+Track the complete lifecycle and current status of a specific impact, including project location, assigned agents, completion status, and documentation.
+
+```python
+from makeimpact import OneClickImpact
+
+sdk = OneClickImpact("your_api_key")
+
+# First create an impact
+response = sdk.plant_tree(amount=1)
+
+# Then track its progress
+tracking_info = sdk.track(
+    user_id=response.user_id,
+    time_utc=response.time_utc
+)
+
+print(f"Tracking ID: {tracking_info.tracking_id}")
+print(f"Impact Initiated: {tracking_info.impact_initiated}")
+if tracking_info.project_location:
+    print(f"Project Location: {tracking_info.project_location}")
+if tracking_info.assigned_agent:
+    print(f"Assigned Agent: {tracking_info.assigned_agent}")
+if tracking_info.impact_completed:
+    print(f"Impact Completed: {tracking_info.impact_completed}")
+```
+
+You can also track impacts from historical records:
+
+```python
+# Get records and track a specific impact
+records = sdk.get_records(limit=1)
+if records.user_records:
+    record = records.user_records[0]
+    tracking_info = sdk.track(
+        user_id=record.user_id,
+        time_utc=record.time_utc
+    )
+    print("Tracking Info:", tracking_info)
+```
+
+**Track Response Fields:**
+
+- `tracking_id`: Unique identifier for this impact (format: `user_id-time_utc`)
+- `impact_initiated`: UTC timestamp when the impact was created
+- `tree_planted`, `waste_removed`, `carbon_captured`, `money_donated`: Impact metrics (optional)
+- `category`: Impact category (e.g., "food" for food-bearing trees)
+- `donation_available`: When the donation became available for the project
+- `donation_sent`: When the donation was sent to the non-profit
+- `assigned_agent`: Name of the agent or organization executing the impact
+- `project_location`: Detailed description of project location and partners
+- `location_map`: Google Maps embed URL for the project location
+- `impact_completed`: When the impact was completed
+- `donation_category`: Type of impact funded (for donations)
+- `impact_video`: URL to video recording or live session
+- `live_session_date`: Scheduled live session timestamp
+- `is_test_transaction`: Whether this was a test transaction
+- `is_bonus_impact`: Whether this was a bonus impact from subscription plans
+
 ### Get Impact
 
 Get aggregated impact statistics.

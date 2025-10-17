@@ -1,4 +1,3 @@
-import json
 from typing import Dict, Any, Optional, List
 import requests
 
@@ -13,6 +12,7 @@ from .types import (
     GetCustomersResponse,
     ImpactResponse,
     WhoAmIResponse,
+    TrackResponse,
     Customer,
     CustomerInfo,
     CustomerDetails,
@@ -57,7 +57,8 @@ class OneClickImpact:
                   amount: int, 
                   category: Optional[str] = None, 
                   customer_email: Optional[str] = None, 
-                  customer_name: Optional[str] = None) -> PlantTreeResponse:
+                  customer_name: Optional[str] = None,
+                  notify: Optional[bool] = None) -> PlantTreeResponse:
         """
         Plant trees through 1ClickImpact
         
@@ -66,6 +67,7 @@ class OneClickImpact:
             category: Optional: Category for the tree planting
             customer_email: Optional: Customer's email
             customer_name: Optional: Customer's name (only used if email is provided)
+            notify: Optional: If set to true, the customer will receive an email confirmation for this impact. Defaults to true. Note: notifications are always disabled in the sandbox environment.
                 
         Returns:
             PlantTreeResponse: Response containing details about the planted trees
@@ -78,6 +80,8 @@ class OneClickImpact:
             body["customer_email"] = customer_email
             if customer_name:
                 body["customer_name"] = customer_name
+        if notify is not None:
+            body["notify"] = notify
                 
         response = self._make_request("/v1/plant_tree", body)
         
@@ -93,7 +97,8 @@ class OneClickImpact:
     def clean_ocean(self,
                    amount: int,
                    customer_email: Optional[str] = None,
-                   customer_name: Optional[str] = None) -> CleanOceanResponse:
+                   customer_name: Optional[str] = None,
+                   notify: Optional[bool] = None) -> CleanOceanResponse:
         """
         Clean ocean plastic through 1ClickImpact
         
@@ -101,6 +106,7 @@ class OneClickImpact:
             amount: Amount of waste to clean in pounds (lbs) (1-10,000,000)
             customer_email: Optional: Customer's email
             customer_name: Optional: Customer's name (only used if email is provided)
+            notify: Optional: If set to true, the customer will receive an email confirmation for this impact. Defaults to true. Note: notifications are always disabled in the sandbox environment.
                 
         Returns:
             CleanOceanResponse: Response containing details about the waste removed
@@ -111,6 +117,8 @@ class OneClickImpact:
             body["customer_email"] = customer_email
             if customer_name:
                 body["customer_name"] = customer_name
+        if notify is not None:
+            body["notify"] = notify
                 
         response = self._make_request("/v1/clean_ocean", body)
         
@@ -125,7 +133,8 @@ class OneClickImpact:
     def capture_carbon(self,
                       amount: int,
                       customer_email: Optional[str] = None,
-                      customer_name: Optional[str] = None) -> CaptureCarbonResponse:
+                      customer_name: Optional[str] = None,
+                      notify: Optional[bool] = None) -> CaptureCarbonResponse:
         """
         Capture carbon through 1ClickImpact
         
@@ -133,6 +142,7 @@ class OneClickImpact:
             amount: Amount of carbon to capture in pounds (lbs) (1-10,000,000)
             customer_email: Optional: Customer's email
             customer_name: Optional: Customer's name (only used if email is provided)
+            notify: Optional: If set to true, the customer will receive an email confirmation for this impact. Defaults to true. Note: notifications are always disabled in the sandbox environment.
                 
         Returns:
             CaptureCarbonResponse: Response containing details about the carbon captured
@@ -143,6 +153,8 @@ class OneClickImpact:
             body["customer_email"] = customer_email
             if customer_name:
                 body["customer_name"] = customer_name
+        if notify is not None:
+            body["notify"] = notify
                 
         response = self._make_request("/v1/capture_carbon", body)
         
@@ -157,7 +169,8 @@ class OneClickImpact:
     def donate_money(self,
                     amount: int,
                     customer_email: Optional[str] = None,
-                    customer_name: Optional[str] = None) -> DonateMoneyResponse:
+                    customer_name: Optional[str] = None,
+                    notify: Optional[bool] = None) -> DonateMoneyResponse:
         """
         Donate money through 1ClickImpact
         
@@ -165,7 +178,8 @@ class OneClickImpact:
             amount: Amount in smallest USD units (cents). For example, $1 = 100, $0.10 = 10 (1-1,000,000,000)
             customer_email: Optional: Customer's email
             customer_name: Optional: Customer's name (only used if email is provided)
-                
+            notify: Optional: If set to true, the customer will receive an email confirmation for this impact. Defaults to true. Note: notifications are always disabled in the sandbox environment.
+
         Returns:
             DonateMoneyResponse: Response containing details about the money donated
         """
@@ -175,6 +189,8 @@ class OneClickImpact:
             body["customer_email"] = customer_email
             if customer_name:
                 body["customer_name"] = customer_name
+        if notify is not None:
+            body["notify"] = notify
                 
         response = self._make_request("/v1/donate_money", body)
         
@@ -401,6 +417,52 @@ class OneClickImpact:
         return GetCustomersResponse(
             customers=customers,
             cursor=response.get("cursor"),
+        )
+    
+    def track(self,
+             user_id: str,
+             time_utc: str) -> TrackResponse:
+        """
+        Track the complete lifecycle and current status of a specific impact
+        
+        Args:
+            user_id: The user ID from the impact record you want to track (format: "U1234"). 
+                    Obtain this from the user_id field returned by get_records() or get_customer_records().
+            time_utc: The UTC timestamp when the impact was made (ISO 8601 format: "YYYY-MM-DDTHH:mm:ss.sssZ"). 
+                     Obtain this from the time_utc field in the same record as the user_id.
+                
+        Returns:
+            TrackResponse: Detailed tracking information about the impact including project location,
+                          assigned agents, completion status, and documentation
+        """
+        query_params = {
+            "user_id": user_id,
+            "time_utc": time_utc
+        }
+        
+        endpoint = "/v1/track"
+        response = self._make_request(endpoint, None, "GET", query_params)
+        
+        # Transform API response to match the TrackResponse interface
+        return TrackResponse(
+            tracking_id=response["tracking_id"],
+            impact_initiated=response["impact_initiated"],
+            tree_planted=response.get("tree_planted"),
+            waste_removed=response.get("waste_removed"),
+            carbon_captured=response.get("carbon_captured"),
+            money_donated=response.get("money_donated"),
+            category=response.get("category"),
+            donation_available=response.get("donation_available"),
+            donation_sent=response.get("donation_sent"),
+            assigned_agent=response.get("assigned_agent"),
+            project_location=response.get("project_location"),
+            location_map=response.get("location_map"),
+            impact_completed=response.get("impact_completed"),
+            donation_category=response.get("donation_category"),
+            impact_video=response.get("impact_video"),
+            live_session_date=response.get("live_session_date"),
+            is_test_transaction=response.get("is_test_transaction"),
+            is_bonus_impact=response.get("is_bonus_impact"),
         )
 
     def _make_request(

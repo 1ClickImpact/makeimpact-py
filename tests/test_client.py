@@ -307,3 +307,116 @@ class TestOneClickImpact:
                 assert customer.customer_name == "Filtered Customer"
                 assert customer.customer_id
                 assert customer.onboarded_on
+    
+    class TestTrackImpact:
+        """Tests for track method"""
+
+        def test_track_tree_planting_impact(self, sdk):
+            """Should track a tree planting impact record"""
+            # First create an impact to track
+            plant_response = sdk.plant_tree(amount=1)
+            
+            # Then track it
+            track_response = sdk.track(
+                user_id=plant_response.user_id,
+                time_utc=plant_response.time_utc
+            )
+            
+            assert track_response is not None
+            assert track_response.tracking_id
+            assert track_response.impact_initiated
+            
+            # Check that the specific impact type has the correct value
+            if track_response.tree_planted is not None:
+                assert track_response.tree_planted == 1
+
+        def test_track_ocean_cleanup_impact(self, sdk):
+            """Should track ocean cleanup impact"""
+            # Create an ocean cleanup impact
+            clean_response = sdk.clean_ocean(amount=5)
+            
+            # Track it
+            track_response = sdk.track(
+                user_id=clean_response.user_id,
+                time_utc=clean_response.time_utc
+            )
+            
+            assert track_response is not None
+            assert track_response.tracking_id
+            
+            if track_response.waste_removed is not None:
+                assert track_response.waste_removed == 5
+
+        def test_track_carbon_capture_impact(self, sdk):
+            """Should track carbon capture impact"""
+            # Create a carbon capture impact
+            carbon_response = sdk.capture_carbon(amount=10)
+            
+            # Track it
+            track_response = sdk.track(
+                user_id=carbon_response.user_id,
+                time_utc=carbon_response.time_utc
+            )
+            
+            assert track_response is not None
+            assert track_response.tracking_id
+            
+            if track_response.carbon_captured is not None:
+                assert track_response.carbon_captured == 10
+
+        def test_track_money_donation_impact(self, sdk):
+            """Should track money donation impact"""
+            # Create a money donation impact
+            donate_response = sdk.donate_money(amount=100)
+            
+            # Track it
+            track_response = sdk.track(
+                user_id=donate_response.user_id,
+                time_utc=donate_response.time_utc
+            )
+            
+            assert track_response is not None
+            assert track_response.tracking_id
+            
+            if track_response.money_donated is not None:
+                assert track_response.money_donated == 100
+
+        def test_track_impact_with_category(self, sdk):
+            """Should track impact with food category"""
+            # Create an impact with food category
+            plant_response = sdk.plant_tree(amount=1, category="food")
+            
+            # Track it
+            track_response = sdk.track(
+                user_id=plant_response.user_id,
+                time_utc=plant_response.time_utc
+            )
+            
+            assert track_response is not None
+            assert track_response.tracking_id
+            assert track_response.category == "food"
+
+        def test_track_optional_fields(self, sdk):
+            """Should include optional tracking fields when available"""
+            # Create an impact
+            plant_response = sdk.plant_tree(amount=1)
+            
+            # Track it
+            track_response = sdk.track(
+                user_id=plant_response.user_id,
+                time_utc=plant_response.time_utc
+            )
+            
+            assert track_response is not None
+            assert track_response.tracking_id
+            
+            # These fields may or may not be present depending on impact status
+            # Just verify they're either None or have the correct type
+            if track_response.donation_available:
+                assert isinstance(track_response.donation_available, str)
+            if track_response.assigned_agent:
+                assert isinstance(track_response.assigned_agent, str)
+            if track_response.impact_completed:
+                assert isinstance(track_response.impact_completed, str)
+            if track_response.is_test_transaction is not None:
+                assert isinstance(track_response.is_test_transaction, bool)

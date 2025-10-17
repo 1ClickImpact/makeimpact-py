@@ -26,6 +26,7 @@ class PlantTreeParams:
     category: Optional[str] = None
     customer_email: Optional[str] = None
     customer_name: Optional[str] = None
+    notify: Optional[bool] = None
 
 
 @dataclass
@@ -42,6 +43,7 @@ class CleanOceanParams:
     amount: int
     customer_email: Optional[str] = None
     customer_name: Optional[str] = None
+    notify: Optional[bool] = None
 
 
 @dataclass
@@ -57,6 +59,7 @@ class CaptureCarbonParams:
     amount: int
     customer_email: Optional[str] = None
     customer_name: Optional[str] = None
+    notify: Optional[bool] = None
 
 
 @dataclass
@@ -72,6 +75,7 @@ class DonateMoneyParams:
     amount: int
     customer_email: Optional[str] = None
     customer_name: Optional[str] = None
+    notify: Optional[bool] = None
 
 
 @dataclass
@@ -212,3 +216,30 @@ CustomerImpactRecord = Union[
 class GetCustomerRecordsResponse:
     customer_records: List[CustomerImpactRecord]
     cursor: Optional[str] = None
+
+@dataclass
+class TrackParams:
+    user_id: str
+    time_utc: str
+
+
+@dataclass
+class TrackResponse:
+    tracking_id: str
+    impact_initiated: str
+    tree_planted: Optional[int] = None
+    waste_removed: Optional[int] = None
+    carbon_captured: Optional[int] = None
+    money_donated: Optional[int] = None
+    category: Optional[str] = None
+    donation_available: Optional[str] = None
+    donation_sent: Optional[str] = None
+    assigned_agent: Optional[str] = None
+    project_location: Optional[str] = None
+    location_map: Optional[str] = None
+    impact_completed: Optional[str] = None
+    donation_category: Optional[str] = None
+    impact_video: Optional[str] = None
+    live_session_date: Optional[str] = None
+    is_test_transaction: Optional[bool] = None
+    is_bonus_impact: Optional[bool] = None
