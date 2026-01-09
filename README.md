@@ -244,6 +244,7 @@ if records.user_records:
 - `location_map`: Google Maps embed URL for the project location
 - `impact_completed`: When the impact was completed
 - `donation_category`: Type of impact funded (for donations)
+- `certificate`: Certificate URL for the impact (only present in production)
 - `impact_video`: URL to video recording or live session
 - `live_session_date`: Scheduled live session timestamp
 - `is_test_transaction`: Whether this was a test transaction
@@ -251,7 +252,7 @@ if records.user_records:
 
 ### Get Impact
 
-Get aggregated impact statistics.
+Get aggregated lifetime impact statistics with breakdown between direct impact and customer impact.
 
 ```python
 from makeimpact import OneClickImpact
@@ -261,10 +262,45 @@ sdk = OneClickImpact("your_api_key")
 # Get overall impact statistics for your organization
 impact = sdk.get_impact()
 
-print(f"Trees planted: {impact.tree_planted}")
-print(f"Ocean waste removed: {impact.waste_removed} lbs")
-print(f"Carbon captured: {impact.carbon_captured} lbs")
-print(f"Money donated: ${impact.money_donated / 100}")
+# Total impact (user + customer)
+print(f"Total trees planted: {impact.tree_planted}")
+print(f"Total ocean waste removed: {impact.waste_removed} lbs")
+print(f"Total carbon captured: {impact.carbon_captured} lbs")
+print(f"Total money donated: ${impact.money_donated / 100}")
+
+# Direct impact by your organization
+print(f"\nDirect impact trees: {impact.user_impact.tree_planted}")
+print(f"Direct impact waste removed: {impact.user_impact.waste_removed} lbs")
+
+# Impact on behalf of customers
+print(f"\nCustomer impact trees: {impact.customer_impact.tree_planted}")
+print(f"Customer impact waste removed: {impact.customer_impact.waste_removed} lbs")
+```
+
+### Get Daily Impact
+
+Get time-series daily impact data with optional date range filtering.
+
+```python
+from makeimpact import OneClickImpact
+
+sdk = OneClickImpact("your_api_key")
+
+# Get all daily impact data
+daily_impact = sdk.get_daily_impact()
+
+for day in daily_impact.daily_impact:
+    print(f"Date: {day.date}")
+    print(f"  Trees: {day.tree_planted}")
+    print(f"  Waste removed: {day.waste_removed} lbs")
+    print(f"  Carbon captured: {day.carbon_captured} lbs")
+    print(f"  Donated: ${day.money_donated / 100}")
+
+# Get daily impact for specific date range
+filtered_impact = sdk.get_daily_impact(
+    start_date="2025-01-01",
+    end_date="2025-12-31"
+)
 ```
 
 ### Who Am I
