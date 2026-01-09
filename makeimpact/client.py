@@ -11,6 +11,9 @@ from .types import (
     GetCustomerRecordsResponse,
     GetCustomersResponse,
     ImpactResponse,
+    ImpactBreakdown,
+    DailyImpactResponse,
+    DailyImpactRecord,
     WhoAmIResponse,
     TrackResponse,
     Customer,
@@ -204,10 +207,10 @@ class OneClickImpact:
 
     def get_impact(self) -> ImpactResponse:
         """
-        Get impact statistics
+        Get aggregated lifetime impact statistics with breakdown between direct impact and customer impact
         
         Returns:
-            ImpactResponse: Impact statistics for your organization
+            ImpactResponse: Total impact statistics including user_impact and customer_impact breakdown
         """
         response = self._make_request("/v1/impact", None, "GET")
         
@@ -217,6 +220,53 @@ class OneClickImpact:
             waste_removed=response.get("waste_removed", 0),
             carbon_captured=response.get("carbon_captured", 0),
             money_donated=response.get("money_donated", 0),
+            user_impact=ImpactBreakdown(
+                tree_planted=response.get("user_impact", {}).get("tree_planted", 0),
+                waste_removed=response.get("user_impact", {}).get("waste_removed", 0),
+                carbon_captured=response.get("user_impact", {}).get("carbon_captured", 0),
+                money_donated=response.get("user_impact", {}).get("money_donated", 0),
+            ),
+            customer_impact=ImpactBreakdown(
+                tree_planted=response.get("customer_impact", {}).get("tree_planted", 0),
+                waste_removed=response.get("customer_impact", {}).get("waste_removed", 0),
+                carbon_captured=response.get("customer_impact", {}).get("carbon_captured", 0),
+                money_donated=response.get("customer_impact", {}).get("money_donated", 0),
+            ),
+        )
+
+    def get_daily_impact(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> DailyImpactResponse:
+        """
+        Get daily impact statistics with optional date range filtering
+        
+        Args:
+            start_date: Optional: The start date after which you want to query the impact records (format: YYYY-MM-DD)
+            end_date: Optional: The end date before which you want to query the impact records (format: YYYY-MM-DD)
+        
+        Returns:
+            DailyImpactResponse: Time-series of daily impact data
+        """
+        query_params = {}
+        if start_date:
+            query_params["start_date"] = start_date
+        if end_date:
+            query_params["end_date"] = end_date
+            
+        response = self._make_request("/v1/impact/daily", None, "GET", query_params if query_params else None)
+        
+        daily_impact_records = [
+            DailyImpactRecord(
+                date=record["date"],
+                tree_planted=record.get("tree_planted", 0),
+                waste_removed=record.get("waste_removed", 0),
+                carbon_captured=record.get("carbon_captured", 0),
+                money_donated=record.get("money_donated", 0),
+            )
+            for record in response.get("daily_impact", [])
+        ]
+        
+        return DailyImpactResponse(
+            user_id=response["user_id"],
+            daily_impact=daily_impact_records,
         )
 
     def who_am_i(self) -> WhoAmIResponse:
@@ -459,6 +509,7 @@ class OneClickImpact:
             location_map=response.get("location_map"),
             impact_completed=response.get("impact_completed"),
             donation_category=response.get("donation_category"),
+            certificate=response.get("certificate"),
             impact_video=response.get("impact_video"),
             live_session_date=response.get("live_session_date"),
             is_test_transaction=response.get("is_test_transaction"),

@@ -73,7 +73,7 @@ class TestOneClickImpact:
         """Tests for getImpact method"""
 
         def test_get_impact_statistics(self, sdk):
-            """Should get impact statistics"""
+            """Should get impact statistics with user_impact and customer_impact breakdown"""
             response = sdk.get_impact()
             assert response is not None
             assert hasattr(response, "user_id")
@@ -81,6 +81,51 @@ class TestOneClickImpact:
             assert hasattr(response, "waste_removed")
             assert hasattr(response, "carbon_captured")
             assert hasattr(response, "money_donated")
+            
+            # Check user_impact breakdown
+            assert hasattr(response, "user_impact")
+            assert hasattr(response.user_impact, "tree_planted")
+            assert hasattr(response.user_impact, "waste_removed")
+            assert hasattr(response.user_impact, "carbon_captured")
+            assert hasattr(response.user_impact, "money_donated")
+            
+            # Check customer_impact breakdown
+            assert hasattr(response, "customer_impact")
+            assert hasattr(response.customer_impact, "tree_planted")
+            assert hasattr(response.customer_impact, "waste_removed")
+            assert hasattr(response.customer_impact, "carbon_captured")
+            assert hasattr(response.customer_impact, "money_donated")
+
+    class TestGetDailyImpact:
+        """Tests for getDailyImpact method"""
+
+        def test_get_daily_impact_no_filters(self, sdk):
+            """Should get daily impact statistics without date filters"""
+            response = sdk.get_daily_impact()
+            assert response is not None
+            assert hasattr(response, "user_id")
+            assert hasattr(response, "daily_impact")
+            assert isinstance(response.daily_impact, list)
+            
+            # If there are any records, verify their structure
+            if len(response.daily_impact) > 0:
+                record = response.daily_impact[0]
+                assert hasattr(record, "date")
+                assert hasattr(record, "tree_planted")
+                assert hasattr(record, "waste_removed")
+                assert hasattr(record, "carbon_captured")
+                assert hasattr(record, "money_donated")
+
+        def test_get_daily_impact_with_date_range(self, sdk):
+            """Should get daily impact statistics with date range filters"""
+            response = sdk.get_daily_impact(
+                start_date="2025-01-01",
+                end_date="2025-12-31"
+            )
+            assert response is not None
+            assert hasattr(response, "user_id")
+            assert hasattr(response, "daily_impact")
+            assert isinstance(response.daily_impact, list)
 
     class TestPlantTrees:
         """Tests for plantTree method"""
@@ -329,6 +374,15 @@ class TestOneClickImpact:
             # Check that the specific impact type has the correct value
             if track_response.tree_planted is not None:
                 assert track_response.tree_planted == 1
+            
+            # Verify optional fields are accessible (certificate only in production)
+            # In sandbox, these fields should be None or not present
+            assert hasattr(track_response, "certificate")
+            assert hasattr(track_response, "impact_video")
+            assert hasattr(track_response, "live_session_date")
+            assert hasattr(track_response, "assigned_agent")
+            assert hasattr(track_response, "project_location")
+            assert hasattr(track_response, "location_map")
 
         def test_track_ocean_cleanup_impact(self, sdk):
             """Should track ocean cleanup impact"""

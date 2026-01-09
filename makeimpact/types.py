@@ -164,12 +164,37 @@ class GetCustomersResponse:
 
 
 @dataclass
+class ImpactBreakdown:
+    tree_planted: int
+    waste_removed: int
+    carbon_captured: int
+    money_donated: int
+
+
+@dataclass
 class ImpactResponse:
     user_id: str
     tree_planted: int
     waste_removed: int
     carbon_captured: int
     money_donated: int
+    user_impact: ImpactBreakdown
+    customer_impact: ImpactBreakdown
+
+
+@dataclass
+class DailyImpactRecord:
+    date: str
+    tree_planted: int
+    waste_removed: int
+    carbon_captured: int
+    money_donated: int
+
+
+@dataclass
+class DailyImpactResponse:
+    user_id: str
+    daily_impact: List[DailyImpactRecord]
 
 
 @dataclass
@@ -239,6 +264,7 @@ class TrackResponse:
     location_map: Optional[str] = None
     impact_completed: Optional[str] = None
     donation_category: Optional[str] = None
+    certificate: Optional[str] = None
     impact_video: Optional[str] = None
     live_session_date: Optional[str] = None
     is_test_transaction: Optional[bool] = None
